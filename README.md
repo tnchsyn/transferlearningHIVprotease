@@ -1,9 +1,9 @@
-# This repository supports the findings in " Improving Predictive Efficacy for Drug Resistance in Novel HIV-1 Protease Inhibitors through Transfer Learning Mechanisms ". Reproduce the WGCN-Chemprop-Physco7 model's external dataset performance using the provided codes. Python-PyTorch is used for training, MATLAB for pre/post-processing.
+# This repository supports the findings of our research paper "Improving Predictive Efficacy for Drug Resistance in Novel HIV-1 Protease Inhibitors through Transfer Learning Mechanisms, Huseyin Tunc, Sumeyye Yilmaz, Busra Nur Darendeli Kiraz, Murat Sari, Seyfullah Enes Kotil, Ozge Sensoy, and Serdar Durdagi Journal of Chemical Information and Modeling 2024 64 (20), 7844-7863 DOI: 10.1021/acs.jcim.4c01037". One can reproduce the WGCN-Chemprop-Physco7 model's external dataset performance using the provided codes. Python-PyTorch is used for training, and MATLAB for pre/post-processing.
 
 # Data
 ADJ.xlsx, F_Xs.mat, F_Ys.mat, Xs.mat, Ys.mat: Find detailed explanations within the training code (WGCN_Train.py).
 Stanford_Data.xlsx: Stanford data for 8 PIs (downloaded 27/12/2022).
-External_Data.xlsx: ChEMBL-curated dataset. Refer to the manuscript for full details.
+External_Data.xlsx: ChEMBL-curated dataset. Please take a look at the manuscript for full details.
 Muts.mat: Contains unique mutations found in the Stanford dataset.
 ChemProp_8PI.mat: ChemProp transfer learning representation (8 PIs, in alphabetical order).
 ChemProp_External.mat: ChemProp transfer learning representation (external PIs).
