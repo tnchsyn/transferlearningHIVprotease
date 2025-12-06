@@ -1,12 +1,17 @@
 clc
 clear
 
-load('Muts.mat')
+scriptDir = fileparts(mfilename('fullpath'));
+rootDir = fullfile(scriptDir, '..', '..');
+dataDir = fullfile(rootDir, 'data', 'raw');
+outputDir = fullfile(rootDir, 'outputs');
 
-load('EXTER_TEST_RESULTS_WGCN_CPROP.mat')
+load(fullfile(dataDir, 'Muts.mat'))
+
+load(fullfile(outputDir, 'EXTER_TEST_RESULTS_WGCN_CPROP.mat'))
 
 YPRED=squeeze(YPRED);
-Data=readtable('External_Data');
+Data=readtable(fullfile(dataDir, 'External_Data.xlsx'));
 FC=string(Data.FoldChange);
 ACT=Data.Activity;
 WT=Data.WildType;
