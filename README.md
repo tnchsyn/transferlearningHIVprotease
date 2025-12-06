@@ -1,16 +1,35 @@
-# This repository supports the findings of our research paper "Improving Predictive Efficacy for Drug Resistance in Novel HIV-1 Protease Inhibitors through Transfer Learning Mechanisms, Huseyin Tunc, Sumeyye Yilmaz, Busra Nur Darendeli Kiraz, Murat Sari, Seyfullah Enes Kotil, Ozge Sensoy, and Serdar Durdagi Journal of Chemical Information and Modeling 2024 64 (20), 7844-7863 DOI: 10.1021/acs.jcim.4c01037". One can reproduce the WGCN-Chemprop-Physco7 model's external dataset performance using the provided codes. Python-PyTorch is used for training, and MATLAB for pre/post-processing.
+# Overview
+
+This repository contains the code and data that support the paper **“Improving Predictive Efficacy for Drug Resistance in Novel HIV-1 Protease Inhibitors through Transfer Learning Mechanisms”** (Journal of Chemical Information and Modeling, 2024, 64 (20), 7844-7863. DOI: 10.1021/acs.jcim.4c01037) by Huseyin Tunc, Sumeyye Yilmaz, Busra Nur Darendeli Kiraz, Murat Sari, Seyfullah Enes Kotil, Ozge Sensoy, and Serdar Durdagi. The workflow combines Python/PyTorch for model training with MATLAB for pre- and post-processing.
+
+The repository enables reproduction of the WGCN-Chemprop-Physco7 model performance on the external dataset referenced in the manuscript.
 
 # Data
-ADJ.xlsx, F_Xs.mat, F_Ys.mat, Xs.mat, Ys.mat: Find detailed explanations within the training code (WGCN_Train.py).
-Stanford_Data.xlsx: Stanford data for 8 PIs (downloaded 27/12/2022).
-External_Data.xlsx: ChEMBL-curated dataset. Please take a look at the manuscript for full details.
-Muts.mat: Contains unique mutations found in the Stanford dataset.
-ChemProp_8PI.mat: ChemProp transfer learning representation (8 PIs, in alphabetical order).
-ChemProp_External.mat: ChemProp transfer learning representation (external PIs).
-F_CP.mat: Provides index start/end points for the 8 PIs within F_Xs.
 
-# Codes
-WGCN_Train.py: Primary training code for the WGCN-Chemprop-Physco7 model. Generates 5-fold cross-validation predictions (external data). Key output: EXTER_TEST_RESULTS_WGCN_CPROP.mat (used by Post_Analysis.mat).
-Post_Analysis.mat: Analyzes external dataset predictions. Provides performance metrics found in the manuscript's Table 3 (Scenario 3) and Table S3.
-class_perform.mat: Calculates classification metrics (used by Post_Analysis.mat).
-str_char_improved: Function extracts unique mutations from isolates (used by Post_Analysis.mat).
+| File | Description |
+| --- | --- |
+| `ADJ.xlsx`, `F_Xs.mat`, `F_Ys.mat`, `Xs.mat`, `Ys.mat` | See the training script (`WGCN_Train.py`) for detailed feature and label descriptions. |
+| `Stanford_Data.xlsx` | Stanford dataset for eight protease inhibitors (downloaded 27/12/2022). |
+| `External_Data.xlsx` | ChEMBL-curated dataset (full details in the manuscript). |
+| `Muts.mat` | Unique mutations identified in the Stanford dataset. |
+| `ChemProp_8PI.mat` | ChemProp transfer learning representation for the eight protease inhibitors (alphabetical order). |
+| `ChemProp_External.mat` | ChemProp transfer learning representation for the external protease inhibitors. |
+| `F_CP.mat` | Start and end indices for each of the eight protease inhibitors within `F_Xs`. |
+
+# Code
+
+| Script | Purpose |
+| --- | --- |
+| `WGCN_Train.py` | Main training pipeline for the WGCN-Chemprop-Physco7 model. Produces 5-fold cross-validation predictions on the external dataset and generates `EXTER_TEST_RESULTS_WGCN_CPROP.mat`, which is consumed by `Post_Analysis.mat`. |
+| `Post_Analysis.mat` | Analyzes external dataset predictions and reports performance metrics corresponding to Table 3 (Scenario 3) and Table S3 of the manuscript. |
+| `class_perform.mat` | Computes classification metrics used by `Post_Analysis.mat`. |
+| `str_char_improved.m` | Extracts unique mutations from isolates; used by `Post_Analysis.mat`. |
+
+# How to Reproduce Results
+
+1. Train the model using `WGCN_Train.py` (Python/PyTorch) to generate cross-validation predictions and `EXTER_TEST_RESULTS_WGCN_CPROP.mat`.
+2. Run `Post_Analysis.mat` (MATLAB) to compute the performance metrics reported in the manuscript tables.
+
+# Citation
+
+If you use this repository, please cite the manuscript mentioned above.
