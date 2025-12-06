@@ -2,41 +2,45 @@
 """
 @author: huseyin.tunc
 """
-import scipy.io
-from scipy.io import savemat
+import math
+from pathlib import Path
+
 import numpy as np
-import torch 
-from torch.utils.data import Subset
-import torch.utils.data as data_utils
+import pandas as pd
+import scipy.io
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-import pandas as pd
+import torch.utils.data as data_utils
+from scipy.io import savemat
+from torch.utils.data import Subset
 
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+ROOT_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT_DIR / "data" / "raw"
+OUTPUT_DIR = ROOT_DIR / "outputs"
 
 # Xs is input for PHYSCO7 features for Stanford Dataset (8 PI, seperately)
-mat = scipy.io.loadmat('Xs.mat')
+mat = scipy.io.loadmat(DATA_DIR / "Xs.mat")
 Xs=mat['Xs']
 Xs=np.array(Xs[0])
 
 # Ys is output for Stanford Dataset (8 PI, seperately)
-mat = scipy.io.loadmat('Ys.mat')
+mat = scipy.io.loadmat(DATA_DIR / "Ys.mat")
 Ys=mat['Ys']
 Ys=np.array(Ys[0])
 
 # F_Xs is combined input consisting of PHYSCO7 features and inhibitor representations (Chemprop) for Stanford Dataset.
-mat = scipy.io.loadmat('F_Xs.mat')
+mat = scipy.io.loadmat(DATA_DIR / "F_Xs.mat")
 F_Xs=mat['F_Xs']
 F_Xs=np.array(F_Xs)
 # F_Ys is the corresponding output (fold change IC50 values)
-mat = scipy.io.loadmat('F_Ys.mat')
+mat = scipy.io.loadmat(DATA_DIR / "F_Ys.mat")
 F_Ys=mat['F_Ys']
 F_Ys=np.array(F_Ys)
 
 #EXTERNAL_FULL_PROCESSED_DATA_CHEMPROP.mat file contains necessary files for external dataset.
-mat = scipy.io.loadmat('EXTERNAL_FULL_PROCESSED_DATA_CHEMPROP.mat')
+mat = scipy.io.loadmat(DATA_DIR / "EXTERNAL_FULL_PROCESSED_DATA_CHEMPROP.mat")
 #External_F_Xs is the input matrix for external data.
 External_F_Xs=mat['F_Xs']
 External_F_Xs=np.array(External_F_Xs)
@@ -50,7 +54,7 @@ n2 =[10]
 d_emb=[16]
 
 #ADJ.xlsx is the adjacency matrix representing the Delaunay triangulation of 198 carbon alpha atom positions in the 3OXC crystal structure.
-adj=pd.read_excel('ADJ.xlsx',index_col=None, header=None)
+adj=pd.read_excel(DATA_DIR / "ADJ.xlsx",index_col=None, header=None)
 
 
 def train_val_dataset(dataset, L,T,INTRA):
@@ -74,8 +78,8 @@ def datapreprocess_tra_val(Xs,Ys,Xs2,Ys2,adjM,L,T,INTRA):
     datasets=train_val_dataset(data_tensor,L,T,INTRA)
     train_loader = data_utils.DataLoader(dataset = datasets['train'], batch_size = 256)
     tadj=torch.tensor(adjM,dtype=torch.float32)
-    tadj_tra=tadj.repeat(len(datasets['train']),1,1).to(device)
-    tadj_val=tadj.repeat(len(datasets['val']),1,1).to(device)
+    tadj_tra=tadj.repeat(len(datasets['train']),1,1).to(DEVICE)
+    tadj_val=tadj.repeat(len(datasets['val']),1,1).to(DEVICE)
     val_loader = data_utils.DataLoader(dataset = datasets['val'], batch_size = 256)
     return train_loader,val_loader,tadj_tra,tadj_val
 
@@ -86,7 +90,7 @@ def datapreprocess_test(Xs,Ys,adjM):
     data_tensor = data_utils.TensorDataset(X,Y)
     test_loader = data_utils.DataLoader(dataset = data_tensor, batch_size = len(data_tensor))
     tadj=torch.tensor(adjM,dtype=torch.float32)
-    tadj_test=tadj.repeat(len(data_tensor),1,1).to(device)
+    tadj_test=tadj.repeat(len(data_tensor),1,1).to(DEVICE)
     return test_loader,tadj_test
 
 def get_external_indexes(A):
@@ -146,7 +150,7 @@ class GCNLayer(nn.Module):
         M=node_feats[:,198*7:]
         nf=node_feats[:,:198*7]
         node_feats=torch.reshape(nf,(-1,198,7))
-        V=self.a.repeat(node_feats.shape[0],198,1).to(device)
+        V=self.a.repeat(node_feats.shape[0],198,1).to(DEVICE)
         wadj_matrix=adj_matrix[:node_feats.shape[0],:,:]*V
         num_neighbours = adj_matrix[:node_feats.shape[0],:,:].sum(dim=-1, keepdims=True)
         node_feats = self.projection(node_feats)
@@ -168,7 +172,7 @@ def trainfun(train_loader,val_loader,test_loader,adj_tra,adj_val,adj_test,cout,L
     R2_Test=torch.tensor(0.)
     R2_Val=torch.tensor(0.)
     R2_Tra=torch.tensor(0.)
-    model = GCNLayer(c_in=7, c_out=cout,hidden1=L1,hidden2=L2,nnf=198).to(device)
+    model = GCNLayer(c_in=7, c_out=cout,hidden1=L1,hidden2=L2,nnf=198).to(DEVICE)
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -177,8 +181,8 @@ def trainfun(train_loader,val_loader,test_loader,adj_tra,adj_val,adj_test,cout,L
         epoch+=1
         for x,y in train_loader:
             optimizer.zero_grad()
-            y_pred = model(x.to(device),adj_tra,L2)
-            loss = criterion(y_pred, y.to(device))
+            y_pred = model(x.to(DEVICE),adj_tra,L2)
+            loss = criterion(y_pred, y.to(DEVICE))
             loss.backward()
             optimizer.step()
 
@@ -196,9 +200,9 @@ def trainfun(train_loader,val_loader,test_loader,adj_tra,adj_val,adj_test,cout,L
         for x,y in test_loader:
             i+=1
             optimizer.zero_grad()
-            y_pred = model(x.to(device),adj_test,L2)
+            y_pred = model(x.to(DEVICE),adj_test,L2)
             Y_PRED.append(y_pred.cpu().detach().numpy())
-            LTest += criterion(y_pred.to(device), y.to(device)).cpu()
+            LTest += criterion(y_pred.to(DEVICE), y.to(DEVICE)).cpu()
             R2_Test+=np.corrcoef(np.squeeze(y.cpu().detach().numpy()), np.squeeze(y_pred.cpu().detach().numpy()))[0][1]
         LTest=LTest/i
         R2_Test=R2_Test/i
@@ -207,8 +211,8 @@ def trainfun(train_loader,val_loader,test_loader,adj_tra,adj_val,adj_test,cout,L
         for x,y in val_loader:
             i+=1
             optimizer.zero_grad()
-            y_pred = model(x.to(device),adj_val,L2)
-            LVal += criterion(y_pred.to(device), y.to(device)).cpu()
+            y_pred = model(x.to(DEVICE),adj_val,L2)
+            LVal += criterion(y_pred.to(DEVICE), y.to(DEVICE)).cpu()
             R2_Val+=np.corrcoef(np.squeeze(y.cpu().detach().numpy()), np.squeeze(y_pred.cpu().detach().numpy()))[0][1]
         LVal=LVal/i
         R2_Val=R2_Val/i
@@ -217,8 +221,8 @@ def trainfun(train_loader,val_loader,test_loader,adj_tra,adj_val,adj_test,cout,L
         for x,y in train_loader:
             i+=1
             optimizer.zero_grad()
-            y_pred = model(x.to(device),adj_tra,L2)
-            LTrain_ += criterion(y_pred.to(device), y.to(device)).cpu()
+            y_pred = model(x.to(DEVICE),adj_tra,L2)
+            LTrain_ += criterion(y_pred.to(DEVICE), y.to(DEVICE)).cpu()
             R2_Tra+=np.corrcoef(np.squeeze(y.cpu().detach().numpy()), np.squeeze(y_pred.cpu().detach().numpy()))[0][1]
         LTrain_=LTrain_/i
         R2_Tra=R2_Tra/i
@@ -276,7 +280,8 @@ def external_test_fun(Xs,Ys,d_emb,n1,n2,adj):
         TS_R2[cvcase]=R2Test
         YPRED.append(Y_PRED)
         mdict={"YPRED":YPRED,"TR_MSE":TR_MSE,"VL_MSE":VL_MSE,"TS_MSE":TS_MSE,"TR_R2":TR_R2,"VL_R2":VL_R2,"TS_R2":TS_R2,"V_indices":V_indices,"TR_indices":TR_indices}
-        savemat("EXTER_TEST_RESULTS_WGCN_CPROP.mat", mdict)
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        savemat(OUTPUT_DIR / "EXTER_TEST_RESULTS_WGCN_CPROP.mat", mdict)
 
     return TR_MSE,VL_MSE,TS_MSE,TR_R2,VL_R2,TS_R2
 

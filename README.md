@@ -4,7 +4,17 @@ This repository contains the code and data that support the paper **“Improving
 
 The repository enables reproduction of the WGCN-Chemprop-Physco7 model performance on the external dataset referenced in the manuscript.
 
-# Data
+## Repository structure
+
+```
+data/raw/           # All provided datasets and feature matrices
+outputs/            # Generated artifacts (e.g., EXTER_TEST_RESULTS_WGCN_CPROP.mat)
+src/preprocess/     # Reserved for preprocessing utilities
+src/training/       # Python training pipeline
+src/postprocess/    # MATLAB post-processing and analysis scripts
+```
+
+## Data (in `data/raw/`)
 
 | File | Description |
 | --- | --- |
@@ -20,15 +30,15 @@ The repository enables reproduction of the WGCN-Chemprop-Physco7 model performan
 
 | Script | Purpose |
 | --- | --- |
-| `WGCN_Train.py` | Main training pipeline for the WGCN-Chemprop-Physco7 model. Produces 5-fold cross-validation predictions on the external dataset and generates `EXTER_TEST_RESULTS_WGCN_CPROP.mat`, which is consumed by `Post_Analysis.mat`. |
-| `Post_Analysis.mat` | Analyzes external dataset predictions and reports performance metrics corresponding to Table 3 (Scenario 3) and Table S3 of the manuscript. |
-| `class_perform.mat` | Computes classification metrics used by `Post_Analysis.mat`. |
-| `str_char_improved.m` | Extracts unique mutations from isolates; used by `Post_Analysis.mat`. |
+| `src/training/WGCN_Train.py` | Main training pipeline for the WGCN-Chemprop-Physco7 model. Produces 5-fold cross-validation predictions on the external dataset and writes `outputs/EXTER_TEST_RESULTS_WGCN_CPROP.mat`, which is consumed by `Post_Analysis.mat`. |
+| `src/postprocess/Post_Analysis.mat` | Analyzes external dataset predictions and reports performance metrics corresponding to Table 3 (Scenario 3) and Table S3 of the manuscript. |
+| `src/postprocess/class_perform.mat` | Computes classification metrics used by `Post_Analysis.mat`. |
+| `src/postprocess/str_char_improved.m` | Extracts unique mutations from isolates; used by `Post_Analysis.mat`. |
 
 # How to Reproduce Results
 
-1. Train the model using `WGCN_Train.py` (Python/PyTorch) to generate cross-validation predictions and `EXTER_TEST_RESULTS_WGCN_CPROP.mat`.
-2. Run `Post_Analysis.mat` (MATLAB) to compute the performance metrics reported in the manuscript tables.
+1. Train the model using `python src/training/WGCN_Train.py` (Python/PyTorch). The script loads datasets from `data/raw/` and writes `outputs/EXTER_TEST_RESULTS_WGCN_CPROP.mat`.
+2. Run `src/postprocess/Post_Analysis.mat` (MATLAB) to compute the performance metrics reported in the manuscript tables. The script reads inputs from `data/raw/` and the generated output file in `outputs/`.
 
 # Citation
 
